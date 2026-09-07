@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Props = {
   subjects: any[];
@@ -13,12 +13,11 @@ export default function AIStudyPlan({
   academicHealth,
   overwhelmMode,
 }: Props) {
-  const [plan, setPlan] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [plan, setPlan] = useState(
+    "Click 'Generate Plan' to create your personalized AI study plan."
+  );
 
-  useEffect(() => {
-    generatePlan();
-  }, [subjects, overwhelmMode]);
+  const [loading, setLoading] = useState(false);
 
   async function generatePlan() {
     try {
@@ -42,9 +41,16 @@ export default function AIStudyPlan({
 
       const data = await response.json();
 
-      setPlan(data.plan || "");
+      if (data.plan) {
+        setPlan(data.plan);
+      } else {
+        setPlan(
+          "Unable to generate study plan."
+        );
+      }
     } catch (error) {
       console.error(error);
+
       setPlan(
         "Unable to generate study plan."
       );
@@ -64,22 +70,19 @@ export default function AIStudyPlan({
 
         <button
           onClick={generatePlan}
-          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm"
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 px-4 py-2 rounded-lg text-sm"
         >
-          Refresh Plan
+          {loading
+            ? "Generating..."
+            : "Generate Plan"}
         </button>
 
       </div>
 
-      {loading ? (
-        <p className="text-slate-400">
-          Generating personalized plan...
-        </p>
-      ) : (
-        <div className="whitespace-pre-wrap text-slate-300 leading-relaxed">
-          {plan}
-        </div>
-      )}
+      <div className="whitespace-pre-wrap text-slate-300 leading-relaxed">
+        {plan}
+      </div>
 
     </div>
   );
