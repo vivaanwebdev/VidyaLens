@@ -14,7 +14,7 @@ export default function LoginPage() {
       setLoading(true);
       setMessage("");
 
-      const { error } =
+      const { data, error } =
         await supabase.auth.signInWithPassword({
           email,
           password,
@@ -26,7 +26,29 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href = "/";
+      const userId = data.user.id;
+
+      const {
+        data: profile,
+        error: profileError,
+      } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (profileError || !profile) {
+        setMessage("Profile not found");
+        setLoading(false);
+        return;
+      }
+
+      if (profile.role === "teacher") {
+        window.location.href = "/teacher";
+      } else {
+        window.location.href = "/";
+      }
+
     } catch (error) {
       console.error(error);
       setMessage("Something went wrong");
@@ -43,7 +65,7 @@ export default function LoginPage() {
         </h1>
 
         <p className="text-slate-400 mb-6">
-          Sign in to your LifeLens account
+          Sign in to your VidyaLens account
         </p>
 
         <div className="space-y-4">

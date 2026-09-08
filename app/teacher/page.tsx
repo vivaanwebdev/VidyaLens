@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 export default function TeacherPage() {
+  const router = useRouter();
+
+  const [authorized, setAuthorized] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -11,9 +15,39 @@ export default function TeacherPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    loadStudents();
-    loadDoubts();
+    checkTeacherAccess();
   }, []);
+
+  async function checkTeacherAccess() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (
+      error ||
+      !profile ||
+      profile.role !== "teacher"
+    ) {
+      router.push("/");
+      return;
+    }
+
+    setAuthorized(true);
+
+    await loadStudents();
+    await loadDoubts();
+  }
 
   async function loadStudents() {
     const { data, error } = await supabase
@@ -108,6 +142,14 @@ export default function TeacherPage() {
     }
 
     loadDoubts();
+  }
+
+  if (!authorized) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        Checking access...
+      </main>
+    );
   }
 
   return (
@@ -216,45 +258,31 @@ function SubjectCard({
   return (
     <div className="bg-slate-800 p-4 rounded-xl">
 
-      <div className="mb-4">
-        <h3 className="font-semibold text-lg">
-          {subject.subject}
-        </h3>
-      </div>
+      <h3 className="font-semibold text-lg mb-4">
+        {subject.subject}
+      </h3>
 
       <div className="grid md:grid-cols-2 gap-4">
 
-        <div>
-          <label className="block mb-2 text-sm text-slate-400">
-            Score
-          </label>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          value={score}
+          onChange={(e) =>
+            setScore(Number(e.target.value))
+          }
+          className="w-full bg-slate-700 p-3 rounded"
+        />
 
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={score}
-            onChange={(e) =>
-              setScore(Number(e.target.value))
-            }
-            className="w-full bg-slate-700 p-3 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 text-sm text-slate-400">
-            Exam Date
-          </label>
-
-          <input
-            type="date"
-            value={examDate}
-            onChange={(e) =>
-              setExamDate(e.target.value)
-            }
-            className="w-full bg-slate-700 p-3 rounded"
-          />
-        </div>
+        <input
+          type="date"
+          value={examDate}
+          onChange={(e) =>
+            setExamDate(e.target.value)
+          }
+          className="w-full bg-slate-700 p-3 rounded"
+        />
 
       </div>
 
