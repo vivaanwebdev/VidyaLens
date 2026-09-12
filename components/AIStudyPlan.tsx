@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import StudyStreakCard from "@/components/StudyStreakCard";
+import { StreakStats } from "@/lib/streaks";
 
 type Props = {
   subjects: any[];
@@ -41,7 +43,7 @@ export default function AIStudyPlan({
 }: Props) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [motivation, setMotivation] = useState("");
-  const [streak, setStreak] = useState(0);
+  const [streakStats, setStreakStats] = useState<StreakStats>({ currentStreak: 0, longestStreak: 0, weeklyConsistency: 0 });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(
     "Generate your timetable to get started."
@@ -64,7 +66,7 @@ export default function AIStudyPlan({
 
  useEffect(() => {
   loadTodaysTimetable();
-  loadStreak();
+  loadStreakStats();
 }, []);
 
   async function loadTodaysTimetable() {
@@ -117,66 +119,14 @@ completed: item.completed,
       console.error(error);
     }
   }
-  async function loadStreak() {
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const { data: student } = await supabase
-      .from("students")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!student) return;
-
-    const { data } = await supabase
-      .from("study_streaks")
-      .select("streak_date")
-      .eq("student_id", student.id)
-      .order("streak_date", {
-        ascending: false,
-      });
-
-    if (!data || data.length === 0) {
-      setStreak(0);
-      return;
-    }
-
-    let currentStreak = 0;
-
-    const today = new Date();
-
-    for (let i = 0; i < data.length; i++) {
-      const expectedDate = new Date(today);
-
-      expectedDate.setDate(
-        today.getDate() - i
-      );
-
-      const expected =
-        expectedDate
-          .toISOString()
-          .split("T")[0];
-
-      if (
-        data[i].streak_date ===
-        expected
-      ) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-
-    setStreak(currentStreak);
-  } catch (error) {
-    console.error(error);
+  async function loadStreakStats() {
+    try {
+      const { data, error } = await supabase.rpc("study_streak_stats");
+      if (error) throw error;
+      const stats = data?.[0];
+      setStreakStats({ currentStreak: Number(stats?.current_streak ?? 0), longestStreak: Number(stats?.longest_streak ?? 0), weeklyConsistency: Number(stats?.weekly_consistency ?? 0) });
+    } catch (error) { console.error(error); }
   }
-}
 
   function startEdit(session: Session) {
     setEditingId(session.id || null);
@@ -253,62 +203,12 @@ completed: item.completed,
 ) {
   if (!id) return;
 
-  const { error } = await supabase
-    .from("timetable_entries")
-    .update({
-      completed: !current,
-    })
-    .eq("id", id);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  setSessions((prev) =>
-    prev.map((s) =>
-      s.id === id
-        ? {
-            ...s,
-            completed: !current,
-          }
-        : s
-    )
-  );
-
-  // Record streak when session is completed
-  if (!current) {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { data: student } = await supabase
-        .from("students")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!student) return;
-
-      const today = new Date()
-        .toISOString()
-        .split("T")[0];
-
-      await supabase
-        .from("study_streaks")
-        .upsert({
-          student_id: student.id,
-          streak_date: today,
-        });
-
-      await loadStreak();
-    } catch (err) {
-      console.error(err);
-    }
-  }
+  try {
+    const { error } = await supabase.rpc("set_study_session_completion", { p_timetable_entry_id: id, p_completed: !current });
+    if (error) throw error;
+    setSessions((prev) => prev.map((session) => session.id === id ? { ...session, completed: !current } : session));
+    await loadStreakStats();
+  } catch (err) { console.error(err); alert("Session completion was not saved. Please try again."); }
 }
 
   async function generatePlan() {
@@ -505,23 +405,7 @@ const completionRate =
             {message}
           </div>
         )}
-<div className="mb-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500 rounded-2xl p-4">
-
-  <div className="flex items-center justify-between">
-
-    <div>
-      <p className="text-slate-300 text-sm">
-        Current Study Streak
-      </p>
-
-      <h3 className="text-3xl font-bold">
-        🔥 {streak} Days
-      </h3>
-    </div>
-
-  </div>
-
-</div>
+      <StudyStreakCard stats={streakStats} />
       <div className="space-y-5">
         {sessions.length > 0 && (
   <div className="bg-slate-800 rounded-2xl p-5 border border-slate-700">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { resolveApplicationRole, roleDashboard } from "@/lib/role-routing";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -28,26 +29,13 @@ export default function LoginPage() {
 
       const userId = data.user.id;
 
-      const {
-        data: profile,
-        error: profileError,
-      } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (profileError || !profile) {
-        setMessage("Profile not found");
+      const role = await resolveApplicationRole(userId);
+      if (!role) {
+        setMessage("Your account is not linked to a school role yet.");
         setLoading(false);
         return;
       }
-
-      if (profile.role === "teacher") {
-        window.location.href = "/teacher";
-      } else {
-        window.location.href = "/";
-      }
+      window.location.href = roleDashboard(role);
 
     } catch (error) {
       console.error(error);

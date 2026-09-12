@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { roleDashboard } from "@/lib/role-routing";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -156,6 +157,8 @@ export default function RegisterPage() {
       setMessage(
         "Account created successfully! You can now log in."
       );
+
+      window.location.href = roleDashboard(role === "teacher" ? "teacher" : "student");
 
       setName("");
       setStudentClass("");
