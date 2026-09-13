@@ -12,6 +12,13 @@ export async function GET(request: NextRequest) {
     const studentIds = (assignments ?? []).flatMap((assignment) =>
       ((assignment.class as unknown as { student_classes: { student_id: number }[] } | null)?.student_classes ?? []).map((student) => student.student_id),
     );
+    const seedResults = await Promise.all(studentIds.map(async (studentId) => {
+      const { data, error } = await supabase.rpc("seed_default_subjects", { p_student_id: studentId });
+      if (error) throw error;
+      return { studentId, created: Number(data ?? 0) };
+    }));
+    const seeded = seedResults.filter((result) => result.created > 0);
+    if (seeded.length) console.info("[teacher-dashboard] auto-seeded default subjects", { teacherId: membership.id, seeded });
     const [{ data: completionRows, error: completionError }, { data: subjectRows, error: subjectError }] = studentIds.length
       ? await Promise.all([
           supabase.from("study_session_completions").select("student_id,completed").in("student_id", studentIds),
