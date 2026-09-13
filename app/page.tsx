@@ -10,10 +10,12 @@ import OverwhelmMode from "../components/OverwhelmMode";
 import SubjectChart from "../components/SubjectChart";
 import PriorityChart from "../components/PriorityChart";
 import PriorityRanking from "../components/PriorityRanking";
+import RecentAssessments, { Assessment } from "../components/RecentAssessments";
 
 export default function Home() {
   const [studentInfo, setStudentInfo] = useState<any>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [schoolName, setSchoolName] = useState("");
   const [loading, setLoading] = useState(true);
   const [overwhelmMode, setOverwhelmMode] =
@@ -59,12 +61,17 @@ export default function Home() {
         setSchoolName(school.name);
       }
 
-      const { data: subjectsData } = await supabase
-        .from("subjects")
-        .select("*")
-        .eq("student_id", student.id);
+      const [{ data: subjectsData }, { data: marksData, error: marksError }] = await Promise.all([
+        supabase.from("subjects").select("*").eq("student_id", student.id),
+        supabase.from("marks").select("id,assessment_name,score,max_score,assessed_at,subject:subjects(subject)").eq("student_id", student.id).order("assessed_at", { ascending: false }).order("created_at", { ascending: false }).limit(8),
+      ]);
 
       setSubjects(subjectsData || []);
+      if (marksError) console.error(marksError);
+      setAssessments((marksData ?? []).map((mark) => ({
+        ...mark,
+        subject: Array.isArray(mark.subject) ? mark.subject[0] ?? null : mark.subject,
+      })) as Assessment[]);
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -198,6 +205,8 @@ export default function Home() {
             overwhelmMode={overwhelmMode}
           />
         </div>
+
+        <RecentAssessments assessments={assessments} />
 
         <div className="mt-8">
           <PriorityRanking

@@ -28,18 +28,17 @@ export default function TeacherPage() {
       return;
     }
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    const { data: teacher, error } = await supabase
+      .from("teachers")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
     if (
       error ||
-      !profile ||
-      profile.role !== "teacher"
+      !teacher
     ) {
-      router.push("/");
+      router.push("/teacher/dashboard");
       return;
     }
 

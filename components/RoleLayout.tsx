@@ -13,10 +13,12 @@ const navigation: Record<Role, { href: string; label: string }[]> = {
     { href: "/student/dashboard", label: "Dashboard" }, { href: "/student/subjects", label: "Subjects" },
     { href: "/student/study-plan", label: "Study Plan" }, { href: "/student/doubts", label: "Doubts" },
     { href: "/student/solved-doubts", label: "Solved Doubts" }, { href: "/student/analytics", label: "Analytics" },
+    { href: "/student/timetable-settings", label: "Timetable Settings" },
   ],
   teacher: [
     { href: "/teacher/dashboard", label: "Dashboard" }, { href: "/teacher/classes", label: "Classes" },
     { href: "/teacher/students", label: "Students" }, { href: "/teacher/marks", label: "Marks" },
+    { href: "/teacher/doubts", label: "Doubts" }, { href: "/teacher/report-card-import", label: "Report Import" },
   ],
   admin: [
     { href: "/admin/dashboard", label: "Dashboard" }, { href: "/admin/classes", label: "Classes" },
