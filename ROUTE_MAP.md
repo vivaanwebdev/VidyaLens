@@ -5,6 +5,8 @@
 | Route | Access | Reachability | Purpose |
 | --- | --- | --- | --- |
 | `/login` | Public | Direct | Authenticates then resolves `school_admins` → `teachers` → `students` for dashboard redirect. |
+| `/` | Public | Primary entry point | VidyaLens product landing page, linking to features, login, invite joining, and school registration. |
+| `/register-school` | Public | Landing page and login | Creates a Supabase Auth administrator, then creates a `schools` record and `school_admins` membership before redirecting to `/admin/dashboard`. |
 | `/join` | Public | Invite URL only | Invite verification and school onboarding. |
 | `/register` | Public | Linked from login | Legacy registration. |
 
@@ -12,13 +14,12 @@
 
 | Route | Access | Reachability | Implementation |
 | --- | --- | --- | --- |
-| `/student/dashboard` | Student | Student nav | Canonical dashboard; re-exports `/`. |
-| `/student/subjects` | Student | Student nav | Alias of full `/` dashboard; not subjects-only. |
-| `/student/study-plan` | Student | Student nav | Alias of full `/` dashboard; not plan-only. |
+| `/student/dashboard` | Student | Student nav | Canonical dashboard implementation. |
+| `/student/subjects` | Student | Student nav | Alias of the student dashboard; not subjects-only. |
+| `/student/study-plan` | Student | Student nav | Alias of the student dashboard; not plan-only. |
 | `/student/doubts` | Student | Student nav | Re-exports `/doubts`. |
 | `/student/solved-doubts` | Student | Student nav | Re-exports `/my-doubts`. |
 | `/student/analytics` | Student | Student nav | Alias of full `/` dashboard; charts are embedded there. |
-| `/` | Student, legacy | Direct | Original dashboard without the role shell. |
 | `/doubts` | Student, legacy | Direct | AI doubt solver. |
 | `/my-doubts` | Student, legacy | Direct | Submitted doubts/replies. |
 | `/student/timetable-settings` | Student | Student nav | Canonical route reusing the timetable-settings form. |
@@ -56,6 +57,7 @@
 | `/api/chat` | Client | Doubts page | AI tutor response. |
 | `/api/study-plan` | Client | `AIStudyPlan` | AI daily timetable. |
 | `/api/onboarding/redeem` | Authenticated | Join page | Invite redemption. |
+| `/api/onboarding/register-school` | Authenticated | Register School page | Calls the atomic `register_school` RPC after Auth account creation. |
 | `/api/admin/classes`, `/invites`, `/assignments` | Admin | Admin dashboard | Administration workflow. |
 | `/api/teacher/dashboard`, `/marks` | Teacher | Teacher dashboard | Classroom overview and marks. |
 | `/test` | Public | None | **Orphaned** subjects debug page. |

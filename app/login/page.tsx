@@ -96,10 +96,10 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <a
-            href="/register"
+            href="/register-school"
             className="text-blue-400 hover:text-blue-300"
           >
-            Create a new account
+            Register your school
           </a>
         </div>
 

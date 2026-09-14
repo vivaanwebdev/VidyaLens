@@ -3,6 +3,7 @@
 | Feature | Pages | Tables / functions | APIs | Dependencies | Audit result |
 | --- | --- | --- | --- | --- | --- |
 | Authentication and role routing | `/login`, `/join`, `/register`, role layouts | `school_admins`, `teachers`, `students`; `invite_codes`, `classes`; invite RPCs | `/api/onboarding/redeem` | Supabase, Next | Canonical roles use memberships. Legacy teacher registration does not create `teachers`. |
+| Public marketing and school registration | `/`, `/register-school` | `schools`, `school_admins`; `register_school` RPC | `/api/onboarding/register-school` | Supabase Auth, Next | Public landing links into school creation. The authenticated RPC creates the school and initial admin membership atomically; invite onboarding remains separate. |
 | Student dashboard / analytics | `/student/dashboard`, `/subjects`, `/study-plan`, `/analytics`, `/` | `students`, `schools`, `subjects` | `/api/study-plan` | Supabase, Recharts | Three canonical nav items are aliases of the same dashboard. |
 | Smart timetable | Dashboard `AIStudyPlan`, `/student/timetable-settings`, `/timetable` | `timetable_settings`, `timetable_entries`, `students` | `/api/study-plan` | OpenAI/Groq, Supabase | Generation and its required settings page are reachable. |
 | Completion and streaks | Dashboard `AIStudyPlan` | `timetable_entries`, `study_session_completions`; streak RPCs | Direct Supabase RPCs | Supabase, React | Active; migration required for atomic writes/stats. |

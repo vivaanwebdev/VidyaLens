@@ -35,6 +35,7 @@ Derived from migrations and repository queries; this is not a live Supabase sche
 | `redeem_invite_code`, `invite_classes` | Join flow | Invite onboarding. |
 | `school_academic_health`, `admin_students_by_class` | Admin APIs | Scoped reporting. |
 | `set_study_session_completion`, `study_streak_stats` | `AIStudyPlan` | Atomic completion and streak reporting. |
+| `register_school` | `/register-school` | Atomically creates a `schools` row and initial `school_admins` membership for the authenticated creator. |
 
 ## Orphaned or weak connections
 
